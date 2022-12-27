@@ -1,0 +1,36 @@
+package com.sprint1.tourmanagement.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.sprint1.tourmanagement.entity.Reservation;
+import com.sprint1.tourmanagement.service.ReservationService;
+
+@RestController
+public class ReservationController {
+	
+	@Autowired
+	private ReservationService reservationService;
+	
+
+	@PostMapping("New_Reservation")
+	public ResponseEntity<Reservation> reserveTour(@RequestBody Reservation newReservation){
+		Reservation reservation=reservationService.newReservation(newReservation);
+		ResponseEntity<Reservation> responseEntity=new ResponseEntity<>(reservation,HttpStatus.OK);
+		return responseEntity;	
+	}
+	
+	@GetMapping("View_Reservation/{reservationId}")
+	public ResponseEntity<Reservation> viewReservation(@PathVariable("reservationId") int reservationId){
+		Reservation reservation=reservationService.viewReservation(reservationId);
+		ResponseEntity<Reservation> responseEntity=new ResponseEntity<>(reservation,HttpStatus.OK);
+		return responseEntity;
+		
+	}
+}

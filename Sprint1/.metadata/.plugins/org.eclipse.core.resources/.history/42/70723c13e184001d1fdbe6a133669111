@@ -1,0 +1,27 @@
+package com.sprint1.tourmanagement.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.sprint1.tourmanagement.entity.Reservation;
+import com.sprint1.tourmanagement.service.ReservationService;
+
+@RestController
+public class ReservationController {
+	
+	@Autowired
+	private ReservationService reservationService;
+	
+
+	@PostMapping("New_Reservation/{cust_id}/{tour_id}")
+	public ResponseEntity<Reservation> reserveTour(@PathVariable("cust_id") int customerId,@PathVariable("tour_id")int TourId){
+		Reservation ct=reservationService.newReservation(customerId, TourId);
+		ResponseEntity<Reservation> responseEntity=new ResponseEntity<>(ct,HttpStatus.OK);
+		return responseEntity;
+		
+	}
+}

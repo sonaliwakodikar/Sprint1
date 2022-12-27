@@ -1,0 +1,98 @@
+package com.sprint1.tourmanagement.service;
+
+import java.time.LocalDate;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.sprint1.tourmanagement.entity.Reservation;
+import com.sprint1.tourmanagement.entity.Tour;
+import com.sprint1.tourmanagement.entity.User;
+import com.sprint1.tourmanagement.exception.InvalidInputException;
+import com.sprint1.tourmanagement.exception.ReservationNotFoundException;
+import com.sprint1.tourmanagement.exception.TourNotFoundException;
+import com.sprint1.tourmanagement.exception.UserNotFoundException;
+import com.sprint1.tourmanagement.repository.ReservationRepository;
+import com.sprint1.tourmanagement.repository.TourRepository;
+import com.sprint1.tourmanagement.repository.UserRepository;
+@Service
+public class ReservationServiceImpl implements ReservationService {
+	
+	@Autowired
+	private ReservationRepository reservationRepository;
+	
+	@Autowired
+	private UserRepository userRepository;
+	
+	@Autowired
+	private TourRepository tourRepository;
+	
+	
+	@Override
+	public Reservation newReservation(Reservation reservation) {
+		int userId=reservation.getUser().getUserId();
+		int tourId=reservation.getTour().getTourId();
+		
+		Optional<User> optionalUser=userRepository.findById(userId);
+		Optional<Tour> optionalTour=tourRepository.findById(tourId);
+		
+		//Validating User
+		if(optionalUser.isEmpty()) {
+			throw new UserNotFoundException("There is no User with Id: "+userId);
+		}
+		
+		//Saving user 
+		User user=optionalUser.get();
+		reservation.setUser(user);
+		
+		//Validating Tour
+		if(optionalTour.isEmpty()) {
+			throw new TourNotFoundException("There is no Tour with Id: "+tourId);
+		}
+		
+		Tour tour=optionalTour.get();
+		if(!tour.isTourIsActive()) {
+			throw new TourNotFoundException("Tour with id "+tourId+" is not Active anymore");
+		}
+		
+		LocalDate currentDate=java.time.LocalDate.now();
+		LocalDate reservedDate=reservation.getReservedDate();
+		LocalDate tourStartDate=reservation.getTour().getTour_startDate();
+		LocalDate paymentDate=reservation.getPaymentDate();
+		
+		//Validating Reservation date
+		if(reservedDate.compareTo(tourStartDate)>0) {
+			throw new InvalidInputException("ReservedDate can't be a future date than Tour Start Date");
+		}
+		
+		//Validating Payment date
+		if(currentDate.compareTo(paymentDate)>0 || currentDate.compareTo(paymentDate)==0) {
+			throw new InvalidInputException("You can't do the payment on or before Tour start date");
+		}
+		
+		//Setting Payment Status
+		if(paymentDate.compareTo(reservedDate)==0 && tourStartDate.compareTo(paymentDate)>0 &&tourStartDate.compareTo(reservedDate)>0) {
+			reservation.setPaymentStatus("Completed");
+		}
+		else if(paymentDate.compareTo(reservedDate)>0) {
+			reservation.setPaymentStatus("Pending");
+		}
+		
+		reservation.setTour(tour);
+		
+		
+		return reservationRepository.save(reservation);
+	}
+
+
+	@Override
+	public Reservation viewReservation(int userId) {
+		Optional<Reservation> optionalReservation=reservationRepository.findById(userId);
+		if(optionalReservation.isEmpty()) {
+			throw new ReservationNotFoundException("No Reservation found with the Id: "+userId);
+		}
+		Reservation reservation=optionalReservation.get();
+		return reservation;
+	}
+}
